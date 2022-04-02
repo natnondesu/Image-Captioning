@@ -36,9 +36,9 @@ def prepare_data(img_path, json_file):
 
     vocab = [word for word in word_freq.keys() if word_freq[word] > 3]
     vocab_dict = {key:value+1 for value, key in enumerate(vocab)}
-    vocab_dict["<unk>"] = len(vocab)+1
-    vocab_dict["<start>"] = len(vocab)+1
-    vocab_dict["<end>"] = len(vocab)+1
+    vocab_dict["<unk>"] = len(vocab_dict)+1
+    vocab_dict["<start>"] = len(vocab_dict)+1
+    vocab_dict["<end>"] = len(vocab_dict)+1
     vocab_dict["<pad>"] = 0
     
     # Save vocab map if it need. (Maybe for inferences)
