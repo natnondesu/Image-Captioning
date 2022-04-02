@@ -19,11 +19,11 @@ You can find python implementation in [source](https://github.com/natnondesu/Ima
 
   For example,
 
-    Caption: `Professor Dang is playing guitar` 
+    Caption: `Professor Dang is playing double guitar` 
 
-    SOS, EOS, PADDING, UNK: `<start> Professor Dang is playing guitar <end> <pad> <pad> . . .`
+    SOS, EOS, PADDING, UNK: `<start> Professor Dang is playing double guitar <end> <pad> <pad> . . .`
 
-    Tokenized: `3366 59 3368 1 30 120 3367 0 0 0 . . .`
+    Tokenized: `3366 59 3368 1 30 120 152 3367 0 0 0 . . .`
     
 `Dataset.py` contains
 
