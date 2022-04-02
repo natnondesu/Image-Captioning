@@ -1,0 +1,11 @@
+# Ignore everything in repository root
+/*
+/source/__pycache__
+
+# Files to not ignore
+!/*.py
+!/*.cpp
+!/*.gitignore
+
+# Folder to not ignore
+!/source/
