@@ -1,9 +1,7 @@
-from matplotlib.pyplot import bar
 import numpy as np
-from torch import dropout, nn
+from torch import nn
 import torchvision.models as models
 import torch
-from zmq import device
 
 class Encoder(nn.Module):
     def __init__(self, pretrained, last_layer_size, latent_size):
