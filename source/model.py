@@ -38,8 +38,8 @@ class Decoder(nn.Module):
         self.num_layers = num_layers
 
         self.Word2Vec = nn.Embedding(self.vocab_size, self.word_emb_size)
-        self.gru = nn.GRU(self.word_emb_size, self.hidden_size, num_layers=num_layers, batch_first=True, dropout=0.2)
-        self.linear = nn.Linear(self.hidden_size, self.vocab_size)
+        self.gru = nn.GRU(self.word_emb_size, hidden_size, num_layers=num_layers, batch_first=True, dropout=0.2)
+        self.linear = nn.Linear(hidden_size, self.vocab_size)
 
     def init_hidden(self, batch_size):
         return torch.zeros((self.num_layers, batch_size, self.hidden_size), device='cuda')
@@ -51,6 +51,7 @@ class Decoder(nn.Module):
         h = self.init_hidden(img.shape[0])
         x, h = self.gru(x_cat, h)
         out = self.linear(x)
+
         return out
 
     def inference(self, img):
@@ -64,15 +65,15 @@ class Decoder(nn.Module):
             out = out.squeeze(1)
             tok = torch.argmax(out, dim=1)
             output.append(tok.cpu().numpy()[0].item())
-
-            if (tok == 1):
+            
+            if (tok == 2) or (len(output)>40):
                 # We found <end> token, Stop prediction
                 break
 
             inputs = self.Word2Vec(tok)
             inputs = inputs.unsqueeze(1)
             
-        return output
+        return torch.Tensor(output)
 
 
             
