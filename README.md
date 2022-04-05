@@ -34,4 +34,6 @@ You can find python implementation in [source](https://github.com/natnondesu/Ima
 
 Using pretrained efficientNetb0 as image Encoder and GRU as Text Decoder.
 
+- Prediction on validation image
+
 ![image](https://user-images.githubusercontent.com/62899961/161792324-d36e3278-1b3c-415a-82ea-14db8352c011.png)
