@@ -30,3 +30,8 @@ You can find python implementation in [source](https://github.com/natnondesu/Ima
 - `ImgCaption_Dataset` class which inherit from pytorch dataset. This class will Load image and transform it to Tensor and return as (x, y) pair.
 
 
+## Baseline model
+
+Using pretrained efficientNetb0 as image Encoder and GRU as Text Decoder.
+
+![image](https://user-images.githubusercontent.com/62899961/161791661-e6fa1dbc-bfac-43fd-bc19-256cf3ed756b.png)
