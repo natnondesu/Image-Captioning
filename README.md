@@ -40,7 +40,7 @@ Using pretrained efficientNetb0 as image Encoder and GRU as Text Decoder.
 
 ## Decoder with Attention model (Show, Attend and Tell (2015) [Paper](https://arxiv.org/abs/1502.03044))
 
-Bahanau Attention (Additive) at decoder stage.
+Bahdanau Attention (Additive) at decoder stage.
 
 - Prediction on validation image
 
