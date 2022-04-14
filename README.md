@@ -30,3 +30,25 @@ You can find python implementation in [source](https://github.com/natnondesu/Ima
 - `ImgCaption_Dataset` class which inherit from pytorch dataset. This class will Load image and transform it to Tensor and return as (x, y) pair.
 
 
+## Baseline model
+
+Using pretrained efficientNetb0 as image Encoder and GRU as Text Decoder.
+
+- Prediction on validation image
+
+![image](https://user-images.githubusercontent.com/62899961/161792324-d36e3278-1b3c-415a-82ea-14db8352c011.png)
+
+## Decoder with Attention model (Show, Attend and Tell (2015) [Paper](https://arxiv.org/abs/1502.03044))
+
+Bahdanau Attention (Additive) at decoder stage.
+
+- Prediction on validation image
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/62899961/163429536-af5c3bac-f065-476e-801f-9f18ce34c8a8.png" width="700" height="270">
+</p>
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/62899961/163430470-92d3ec75-7873-4325-9401-c0bee78ec002.png" width="700" height="270">
+</p>
+
