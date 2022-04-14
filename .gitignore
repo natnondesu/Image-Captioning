@@ -1,7 +1,7 @@
 # Ignore everything in repository root
 /*
 /source/__pycache__
-
+/source/models/__pycache__
 # Files to not ignore
 !/*.py
 !/*.cpp
