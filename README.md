@@ -44,5 +44,11 @@ Bahdanau Attention (Additive) at decoder stage.
 
 - Prediction on validation image
 
-![image](https://user-images.githubusercontent.com/62899961/163429536-af5c3bac-f065-476e-801f-9f18ce34c8a8.png)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/62899961/163429536-af5c3bac-f065-476e-801f-9f18ce34c8a8.png" width="700" height="270">
+</p>
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/62899961/163430470-92d3ec75-7873-4325-9401-c0bee78ec002.png" width="700" height="270">
+</p>
 
