@@ -44,7 +44,7 @@ class Attention(nn.Module): # Bahdanau
         fatt = self.relu(att1+att2.unsqueeze(1)) # Additive attention (Bahdanau)
         att = self.full_att(fatt) # (batch, pixel, 1)
         alpha = self.softmax(att)
-        context_vector = torch.sum(alpha*encoder_feat, dim=1) # (batch, encode_channel, 1)
+        context_vector = torch.sum(alpha*encoder_feat, dim=1) # (batch, encode_channel)
         return context_vector, alpha.squeeze()
 
         
@@ -69,7 +69,7 @@ class AttentionDecoder(nn.Module):
         batch_size = img.shape[0]
         num_pixel = img.shape[1]
         word_emb = self.Word2Vec(cap)
-        h = self.init_hidden(img.shape[0])
+        h = self.init_hidden(batch_size)
         # Put img latent on top of caption sequence.
         decoder_length = (caplen).tolist() # To find what is the maximum length in this batch.
         predictions = torch.zeros(batch_size, max(decoder_length), self.vocab_size).cuda()
@@ -87,30 +87,34 @@ class AttentionDecoder(nn.Module):
         predictions[:, 0, 1] = 1 # Mark at <start> token
         return predictions, decoder_length, alphas
 
-    def inference(self, img, max_len=50):
+    def inference(self, img, max_len=30):
         batch_size = img.shape[0]
         num_pixel = img.shape[1]
-        output = []
-        alphas = []
-        inputs = self.Word2Vec(torch.LongTensor([1]).cuda())
-        h = self.init_hidden(img.shape[0])
-        
+        output = np.ones((batch_size, max_len))
+        alphas = np.ones((batch_size, max_len, num_pixel))
+        inputs = self.Word2Vec(torch.ones((batch_size), dtype=torch.long).cuda())
+        h = self.init_hidden(batch_size)
+        step = 1
         while True:
-            context_vector, alpha = self.attention(img[:], h)
-            h = self.GRUCell(torch.cat((inputs, context_vector), dim=1), h)
+            context_vector, alpha = self.attention(img[:], h[:])
+            h = self.GRUCell(torch.cat((inputs, context_vector), dim=1), h[:])
             out = self.linear(h)
             out = out.squeeze(1)
             tok = torch.argmax(out, dim=1)
-            output.append(tok.cpu().numpy()[0].item())
-            alphas.append(alpha.cpu().numpy())
+
+            output[:, step] = tok.cpu().numpy()
+            alphas[:, step, :] = alpha.cpu().numpy()
+            #output.append(tok.cpu().numpy()[0].item())
+            #alphas.append(alpha.cpu().numpy())
             
-            if (tok == 2) or (len(output)>=max_len):
+            if step>=(max_len-1):
                 # We found <end> token, Stop prediction
                 break
 
+            step += 1
             inputs = self.Word2Vec(tok)
             
-        return torch.Tensor(np.array(output)), torch.Tensor(np.array(alphas))
+        return output, alphas
 
 
             
