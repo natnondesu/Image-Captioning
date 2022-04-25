@@ -52,6 +52,7 @@ def Create_image_caption_pair(image_split, caption_split, vocab, max_len=50):
     enc_caption_list = []
     enc_caption_len = []
     img_list = []
+    cap_index = []
     for idx, img in enumerate(image_split):
         for cap in caption_split[idx]:
             # Dont sample caption more than max_len
@@ -64,7 +65,24 @@ def Create_image_caption_pair(image_split, caption_split, vocab, max_len=50):
             enc_caption_list.append(enc_cap)
             enc_caption_len.append(len(cap)+2)
             img_list.append(img)
+            cap_index.append(idx)
 
-    return img_list, enc_caption_list, enc_caption_len
+    return img_list, enc_caption_list, enc_caption_len, cap_index
 
+def get_caption_back(token, vocab):
+    caption = []
+    rev_vocab = dict(map(reversed, vocab.items()))
+    removewords = ["<start>", "<end>", "<pad>"]
+    
+    for cap in token:
+        # find stop index
+        try:
+            stop_idx = cap.index(2)
+        except:
+            stop_idx = len(cap)-1
 
+        words = list(map(rev_vocab.get, cap[:stop_idx+1]))
+        post_word = [word for word in words if word not in removewords]
+        caption.append(post_word)
+
+    return caption
