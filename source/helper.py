@@ -37,6 +37,7 @@ def evaluate(encoder, decoder, device, test_loader, vocab_dict, caption):
     decoder.eval()
     total_preds = []
     total_labels = []
+    total_bleu = []
 
     with torch.no_grad():
         for idx, data in enumerate(test_loader):
@@ -51,8 +52,9 @@ def evaluate(encoder, decoder, device, test_loader, vocab_dict, caption):
             references = [caption[i] for i in caption_idx]
             
             bleu4 = corpus_bleu(references, hypotheses)
+            total_bleu.append(bleu4)
 
-    return bleu4
+    return np.array(total_bleu).mean()
 
 def LR_scheduler_with_warmup(optimizer, LR, epoch, warmup_epoch=0, scale=0.7, set_LR=0.001, interval_epoch=2):
     """Sets the learning rate to the initial LR decayed by 5% every interval epochs"""
