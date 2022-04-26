@@ -30,51 +30,60 @@ class Encoder(nn.Module):
         return out
         
 class Decoder(nn.Module):
-    def __init__(self, word_emb_size, hidden_size, num_layers, vocab_size):
+    def __init__(self, word_emb_size, hidden_size, vocab_size):
         super(Decoder, self).__init__()
         self.word_emb_size = word_emb_size
         self.hidden_size = hidden_size
         self.vocab_size = vocab_size
-        self.num_layers = num_layers
+        #self.num_layers = num_layers
 
         self.Word2Vec = nn.Embedding(self.vocab_size, self.word_emb_size)
-        self.gru = nn.GRU(self.word_emb_size, hidden_size, num_layers=num_layers, batch_first=True, dropout=0.2)
+        self.GRUCell = nn.GRUCell(self.word_emb_size, hidden_size)
         self.linear = nn.Linear(hidden_size, self.vocab_size)
 
     def init_hidden(self, batch_size):
-        return torch.zeros((self.num_layers, batch_size, self.hidden_size), device='cuda')
+        return torch.zeros((batch_size, self.hidden_size), device='cuda')
 
-    def forward(self, img, cap):
+    def forward(self, img, cap, caplen):
+        batch_size = img.shape[0]
         word_emb = self.Word2Vec(cap)
+        decoder_length = (caplen).tolist()
         # Put img latent on top of caption sequence.
         x_cat = torch.cat((img.unsqueeze(1), word_emb[:, :-1, :]), dim=1)
-        h = self.init_hidden(img.shape[0])
-        x, h = self.gru(x_cat, h)
-        out = self.linear(x)
+        h = self.init_hidden(batch_size)
+        predictions = torch.zeros(batch_size, max(decoder_length), self.vocab_size).cuda()
+        for i in range(0, max(decoder_length)):
+            # Teacher forcing goes here.
+            h = self.GRUCell(x_cat[:, i, :], h[:])
+            preds = self.linear(h) # (batch, size_vocab)
+            predictions[:, i, :] = preds
 
-        return out
+        return predictions, decoder_length
 
-    def inference(self, img):
-        output = []
-        inputs = img.unsqueeze(1)
-        h = self.init_hidden(inputs.shape[0])
-      
+    def inference(self, img, max_len=30):
+
+        batch_size = img.shape[0]
+        output = np.ones((batch_size, max_len))
+        inputs = img
+        h = self.init_hidden(batch_size)
+        step = 0
         while True:
-            x, h = self.gru(inputs, h)
-            out = self.linear(x)
+            h = self.GRUCell(inputs, h[:])
+            out = self.linear(h)
             out = out.squeeze(1)
             tok = torch.argmax(out, dim=1)
-            output.append(tok.cpu().numpy()[0].item())
+
+            output[:, step] = tok.cpu().numpy()
             
-            if (tok == 2) or (len(output)>40):
-                # We found <end> token, Stop prediction
+            if step>=(max_len-1):
+                # We reach maximum config, Stop prediction
                 break
 
+            step += 1
             inputs = self.Word2Vec(tok)
-            inputs = inputs.unsqueeze(1)
             
-        return torch.Tensor(output)
-
+        return output
+        
 
             
 
