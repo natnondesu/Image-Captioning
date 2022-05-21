@@ -6,7 +6,7 @@ import torchvision.models as models
 import torch
 
 class Encoder(nn.Module):
-    def __init__(self, pretrained, embedding_dim, latent_pix_dim=16):
+    def __init__(self, pretrained, embedding_dim, latent_pix_dim=16, unfreeze_layer_count=None):
         super(Encoder, self).__init__()
         self.preNet = pretrained
         # Turn off gradient for pretrained model
@@ -17,10 +17,11 @@ class Encoder(nn.Module):
         pre_modules = list(self.preNet.children())[:-2]
         # Unfreeze Last 3 Layer
         # Turn on gradient for unfreeze last 3 layers
-        for layer in pre_modules[0][-3:]:
-            for param_name, param in layer.named_parameters():
-                param.requires_grad = True
-                print(param_name, "requires_grad: {}".format(param.requires_grad))
+        if unfreeze_layer_count:
+            for layer in pre_modules[0][-unfreeze_layer_count:]:
+                for param_name, param in layer.named_parameters():
+                    param.requires_grad = True
+                    print(param_name, "requires_grad: {}".format(param.requires_grad))
 
         self.Net = nn.Sequential(*pre_modules)
         self.dense = nn.Linear(1408, embedding_dim)
