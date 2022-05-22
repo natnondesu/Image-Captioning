@@ -4,6 +4,7 @@ import torchvision.models as models
 import torch
 
 class Encoder(nn.Module):
+
     def __init__(self, pretrained, pretrained_dim, embedding_dim, unfreeze_layer_count=None):
         super(Encoder, self).__init__()
         self.preNet = pretrained
