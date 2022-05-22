@@ -1,4 +1,3 @@
-from statistics import mode
 import numpy as np
 from torch import nn
 import torchvision.models as models
