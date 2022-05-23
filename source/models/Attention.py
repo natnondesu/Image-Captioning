@@ -161,7 +161,7 @@ class AttentionDecoder(nn.Module):
         batch_size = img.shape[0]
         num_pixel = img.shape[1] * img.shape[2]
         output = np.ones((batch_size, max_len))
-        alphas = np.ones((batch_size, max_len, num_pixel))
+        alphas = np.zeros((batch_size, max_len, num_pixel))
         inputs = self.Word2Vec(torch.ones((batch_size), dtype=torch.long).cuda())
         h = self.init_hidden(batch_size)
         step = 1

@@ -4,8 +4,9 @@ import torch
 from nltk.translate.bleu_score import corpus_bleu
 from source.models.Attention import Attention
 from source.utils import get_caption_back
+from source.Bleuloss.expectedMultiBleu import bleu
 
-def train(encoder, decoder, device, train_loader, optimizer, criterion, log_interval=50):
+def train(encoder, decoder, device, train_loader, optimizer, criterion, lambda_reg=1, log_interval=50):
     total_loss = 0
     encoder.train()
     decoder.train()
@@ -16,10 +17,13 @@ def train(encoder, decoder, device, train_loader, optimizer, criterion, log_inte
         encoder.zero_grad()
         decoder.zero_grad()
         img_latent = encoder(data_img)
-        outputs, decoded_lengths, att = decoder(img_latent, data_cap, caption_length)
+        outputs, decoded_lengths, alphas = decoder(img_latent, data_cap, caption_length)
         packed_output = pack_padded_sequence(outputs, decoded_lengths, batch_first=True, enforce_sorted=False)
         packed_label = pack_padded_sequence(data_cap, decoded_lengths, batch_first=True, enforce_sorted=False)  
+        # Main loss
         loss = criterion(packed_output[0], packed_label[0])
+        # Doubly stochastic attention regularization section 4.2.1 Show, Attend and Tell
+        loss += lambda_reg * ((1. - torch.sum(alphas, dim=1)) ** 2).mean()
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
@@ -30,14 +34,16 @@ def train(encoder, decoder, device, train_loader, optimizer, criterion, log_inte
 
     return total_loss
         
-
 # Test
 def evaluate(encoder, decoder, device, test_loader, vocab_dict, caption):
     encoder.eval()
     decoder.eval()
     total_preds = []
     total_labels = []
-    total_bleu = []
+    # n-BLEU Score on Each n-Gram
+    total_bleu2 = []
+    total_bleu3 = []
+    total_bleu4 = []
 
     with torch.no_grad():
         for idx, data in enumerate(test_loader):
@@ -50,11 +56,21 @@ def evaluate(encoder, decoder, device, test_loader, vocab_dict, caption):
             outputs = outputs.tolist()
             hypotheses = get_caption_back(outputs, vocab_dict)
             references = [caption[i] for i in caption_idx]
-            
-            bleu4 = corpus_bleu(references, hypotheses)
-            total_bleu.append(bleu4)
+            # Calculate BLEU Score
+            bleu2, bleu3 ,bleu4 = corpus_bleu(references, hypotheses, weights=[
+                (0.5, 0.5),              # For BLEU-2
+                (0.333, 0.333, 0.334),   # For BLEU-3
+                (0.25, 0.25, 0.25, 0.25) # For BLEU-4
+            ])
+            total_bleu2.append(bleu2)
+            total_bleu3.append(bleu3)
+            total_bleu4.append(bleu4)
+    # Mean of n-BLEU Score for test set
+    mean_bleu2 = np.array(total_bleu2).mean()
+    mean_bleu3 = np.array(total_bleu3).mean()
+    mean_bleu4 = np.array(total_bleu4).mean()
 
-    return np.array(total_bleu).mean()
+    return mean_bleu2, mean_bleu3, mean_bleu4
 
 def LR_scheduler_with_warmup(optimizer, LR, epoch, warmup_epoch=0, scale=0.7, set_LR=0.001, interval_epoch=2):
     """Sets the learning rate to the initial LR decayed by 5% every interval epochs"""
