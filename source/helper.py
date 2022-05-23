@@ -4,8 +4,9 @@ import torch
 from nltk.translate.bleu_score import corpus_bleu
 from source.models.Attention import Attention
 from source.utils import get_caption_back
+from source.Bleuloss.expectedMultiBleu import bleu
 
-def train(encoder, decoder, device, train_loader, optimizer, criterion, log_interval=50):
+def train(encoder, decoder, device, train_loader, optimizer, criterion, lambda_reg=1, log_interval=50):
     total_loss = 0
     encoder.train()
     decoder.train()
@@ -16,10 +17,17 @@ def train(encoder, decoder, device, train_loader, optimizer, criterion, log_inte
         encoder.zero_grad()
         decoder.zero_grad()
         img_latent = encoder(data_img)
-        outputs, decoded_lengths, att = decoder(img_latent, data_cap, caption_length)
+        outputs, decoded_lengths, alphas = decoder(img_latent, data_cap, caption_length)
         packed_output = pack_padded_sequence(outputs, decoded_lengths, batch_first=True, enforce_sorted=False)
+<<<<<<< HEAD
         packed_label = pack_padded_sequence(data_cap, decoded_lengths, batch_first=True, enforce_sorted=False)
+=======
+        packed_label = pack_padded_sequence(data_cap, decoded_lengths, batch_first=True, enforce_sorted=False)  
+        # Main loss
+>>>>>>> upstream/master
         loss = criterion(packed_output[0], packed_label[0])
+        # Doubly stochastic attention regularization section 4.2.1 Show, Attend and Tell
+        loss += lambda_reg * ((1. - torch.sum(alphas, dim=1)) ** 2).mean()
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
@@ -29,7 +37,11 @@ def train(encoder, decoder, device, train_loader, optimizer, criterion, log_inte
     total_loss /= len(train_loader)
 
     return total_loss
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> upstream/master
 # Test
 def evaluate(encoder, decoder, device, test_loader, vocab_dict, caption):
     encoder.eval()
