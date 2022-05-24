@@ -4,7 +4,6 @@ import torch
 from nltk.translate.bleu_score import corpus_bleu
 from source.models.Attention import Attention
 from source.utils import get_caption_back
-from source.Bleuloss.expectedMultiBleu import bleu
 
 def train(encoder, decoder, device, train_loader, optimizer, criterion, lambda_reg=1, log_interval=50):
     total_loss = 0

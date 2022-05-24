@@ -68,6 +68,7 @@ class PyramidAtt(nn.Module): # Feature Pyramid with Bahdanau attention
         self.encoder_att = nn.Linear(512, attention_dim)
         self.decoder_att = nn.Linear(decoder_dim, attention_dim)
         self.full_att = nn.Linear(attention_dim, 1)
+
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.softmax = nn.Softmax(dim=1)
@@ -131,6 +132,9 @@ class AttentionDecoder(nn.Module):
         #self.gru = nn.GRU(self.word_emb_size, decoder_hidden, num_layers=num_layers, batch_first=True, dropout=0.2)
         self.GRUCell = nn.GRUCell(word_emb_size+encoder_dim, decoder_hidden)
         self.linear = nn.Linear(decoder_hidden, self.vocab_size)
+        # Gate context
+        self.fc_beta = nn.Linear(decoder_hidden, encoder_dim)
+        self.sigmoid = nn.Sigmoid()
 
     def init_hidden(self, batch_size):
         return torch.zeros((batch_size, self.hidden_size), device='cuda')
@@ -148,8 +152,11 @@ class AttentionDecoder(nn.Module):
         for i in range(1, max(decoder_length)):
             # Calculate Attention scores.
             context_vector, alpha = self.attention(img[:], h)
+            # Gate context forward
+            gate = self.sigmoid(self.fc_beta(h))
+            weighted_context_vector = gate*context_vector
             # Teacher forcing goes here.
-            h = self.GRUCell(torch.cat((word_emb[:, i-1, :], context_vector), dim=1), h[:])
+            h = self.GRUCell(torch.cat((word_emb[:, i-1, :], weighted_context_vector), dim=1), h[:])
             preds = self.linear(h) # (batch, size_vocab)
             predictions[:, i, :] = preds
             alphas[:, i, :] = alpha
@@ -167,7 +174,11 @@ class AttentionDecoder(nn.Module):
         step = 1
         while True:
             context_vector, alpha = self.attention(img[:], h[:])
-            h = self.GRUCell(torch.cat((inputs, context_vector), dim=1), h[:])
+            # Gate context forward
+            gate = self.sigmoid(self.fc_beta(h))
+            weighted_context_vector = gate*context_vector
+            # GRU step
+            h = self.GRUCell(torch.cat((inputs, weighted_context_vector), dim=1), h[:])
             out = self.linear(h)
             out = out.squeeze(1)
             tok = torch.argmax(out, dim=1)
